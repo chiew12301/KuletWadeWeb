@@ -4,6 +4,8 @@ let gameInterval, dropInterval;
 let isPaused = false;
 const images = {}, sounds = {};
 
+let dragging = false;
+
 function loadAssets() {
   images.water = new Image();
   images.water.src = 'assets/images/water.png';
@@ -37,8 +39,14 @@ function startGame() {
   highScore = localStorage.getItem('highScore') || 0;
 
   document.addEventListener('keydown', keyboardControl);
-  document.getElementById('left-button').addEventListener('touchstart', () => movePlayer(-20));
-  document.getElementById('right-button').addEventListener('touchstart', () => movePlayer(20));
+  canvas.addEventListener('mousedown', startDrag);
+  canvas.addEventListener('mousemove', doDrag);
+  canvas.addEventListener('mouseup', stopDrag);
+  canvas.addEventListener('mouseleave', stopDrag);
+  
+  canvas.addEventListener('touchstart', startDrag);
+  canvas.addEventListener('touchmove', doDrag);
+  canvas.addEventListener('touchend', stopDrag);
 
   gameInterval = setInterval(updateGame, 30);
   dropInterval = setInterval(spawnDrop, 1000);
@@ -139,4 +147,33 @@ function endGame() {
 
   sounds.bgm.pause();
 }
+
+function getEventX(e) {
+return e.touches ? e.touches[0].clientX : e.clientX;
+}
+
+function startDrag(e) {
+const x = getEventX(e) - canvas.getBoundingClientRect().left;
+if (x >= player.x && x <= player.x + player.width) {
+    dragging = true;
+    e.preventDefault();
+}
+}
+
+function doDrag(e) {
+if (!dragging) return;
+
+const canvasRect = canvas.getBoundingClientRect();
+const x = getEventX(e) - canvasRect.left;
+
+player.x = x - player.width / 2;
+player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
+
+e.preventDefault();
+}
+
+function stopDrag(e) {
+dragging = false;
+}
+
 loadAssets();
