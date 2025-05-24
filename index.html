@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Kulet Wade</title>
     <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div id="game-container">
         <div id="start-screen" class="overlay">
@@ -28,9 +31,15 @@
             <button onclick="restartGame()">Restart</button>
         </div>
 
+        <div id="hud">
+            <div id="score">Score: 0</div>
+            <div id="timer">Time Left: 60s</div>
+        </div>
+
         <button id="pause-button" onclick="pauseGame()">Pause</button>
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>

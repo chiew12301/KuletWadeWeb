@@ -1,9 +1,10 @@
 let canvas, ctx;
 let player, drops = [], score = 0, highScore = 0;
-let gameInterval, dropInterval;
+let gameInterval, dropInterval, timerInterval;
 let isPaused = false;
 let isDragging = false;
 let dragOffsetX = 0;
+let timeLeft = 60;
 
 const images = {}, sounds = {};
 
@@ -40,7 +41,9 @@ function startGame() {
   player = { x: canvas.width / 2 - 32, y: canvas.height - 100, width: 64, height: 64 };
   drops = [];
   score = 0;
+  timeLeft = 60;
   isPaused = false;
+
   highScore = localStorage.getItem('highScore') || 0;
 
   canvas.addEventListener('mousedown', startDrag);
@@ -52,8 +55,11 @@ function startGame() {
   canvas.addEventListener('touchmove', doDrag, { passive: false });
   canvas.addEventListener('touchend', stopDrag);
 
+  updateHUD();
+
   gameInterval = setInterval(updateGame, 30);
   dropInterval = setInterval(spawnDrop, 1000);
+  timerInterval = setInterval(updateTimer, 1000);
   sounds.bgm.play();
 }
 
@@ -94,6 +100,7 @@ function updateGame() {
         sounds.bomb.play();
       }
       drops.splice(i, 1);
+      updateHUD();
     } else if (drop.y > canvas.height) {
       drops.splice(i, 1);
     } else {
@@ -102,17 +109,29 @@ function updateGame() {
     }
   }
 
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, 10, 30);
-
   if (score >= 100 || score <= -50) endGame();
+}
+
+function updateTimer() {
+  if (isPaused) return;
+  timeLeft--;
+  updateHUD();
+
+  if (timeLeft <= 0) {
+    endGame();
+  }
+}
+
+function updateHUD() {
+  document.getElementById('score').innerText = `Score: ${score}`;
+  document.getElementById('timer').innerText = `Time Left: ${timeLeft}s`;
 }
 
 function pauseGame() {
   isPaused = true;
   clearInterval(gameInterval);
   clearInterval(dropInterval);
+  clearInterval(timerInterval);
   document.getElementById('pause-screen').classList.remove('hidden');
   sounds.bgm.pause();
 }
@@ -122,16 +141,21 @@ function resumeGame() {
   document.getElementById('pause-screen').classList.add('hidden');
   gameInterval = setInterval(updateGame, 30);
   dropInterval = setInterval(spawnDrop, 1000);
+  timerInterval = setInterval(updateTimer, 1000);
   sounds.bgm.play();
 }
 
 function restartGame() {
-  startGame(); // reset all
+  clearInterval(gameInterval);
+  clearInterval(dropInterval);
+  clearInterval(timerInterval);
+  startGame();
 }
 
 function endGame() {
   clearInterval(gameInterval);
   clearInterval(dropInterval);
+  clearInterval(timerInterval);
   document.getElementById('pause-button').style.display = 'none';
   document.getElementById('result-screen').classList.remove('hidden');
 
