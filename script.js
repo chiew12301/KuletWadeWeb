@@ -2,9 +2,10 @@ let canvas, ctx;
 let player, drops = [], score = 0, highScore = 0;
 let gameInterval, dropInterval;
 let isPaused = false;
-const images = {}, sounds = {};
+let isDragging = false;
+let dragOffsetX = 0;
 
-let dragging = false;
+const images = {}, sounds = {};
 
 function loadAssets() {
   images.water = new Image();
@@ -27,32 +28,41 @@ function loadAssets() {
 
 function startGame() {
   document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('game-screen').classList.remove('hidden');
+  document.getElementById('result-screen').classList.add('hidden');
+  document.getElementById('pause-screen').classList.add('hidden');
+  document.getElementById('pause-button').style.display = 'block';
 
   canvas = document.getElementById('gameCanvas');
   ctx = canvas.getContext('2d');
 
-  player = { x: 200, y: 580, width: 64, height: 64 };
+  resizeCanvas();
+
+  player = { x: canvas.width / 2 - 32, y: canvas.height - 100, width: 64, height: 64 };
   drops = [];
   score = 0;
   isPaused = false;
   highScore = localStorage.getItem('highScore') || 0;
 
-  document.addEventListener('keydown', keyboardControl);
   canvas.addEventListener('mousedown', startDrag);
   canvas.addEventListener('mousemove', doDrag);
   canvas.addEventListener('mouseup', stopDrag);
   canvas.addEventListener('mouseleave', stopDrag);
-  
-  canvas.addEventListener('touchstart', startDrag);
-  canvas.addEventListener('touchmove', doDrag);
+
+  canvas.addEventListener('touchstart', startDrag, { passive: false });
+  canvas.addEventListener('touchmove', doDrag, { passive: false });
   canvas.addEventListener('touchend', stopDrag);
 
   gameInterval = setInterval(updateGame, 30);
   dropInterval = setInterval(spawnDrop, 1000);
-
   sounds.bgm.play();
 }
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+window.addEventListener('resize', resizeCanvas);
 
 function spawnDrop() {
   if (isPaused) return;
@@ -61,20 +71,9 @@ function spawnDrop() {
   drops.push({ x, y: 0, type });
 }
 
-function keyboardControl(e) {
-  if (e.key === "ArrowLeft") movePlayer(-20);
-  if (e.key === "ArrowRight") movePlayer(20);
-}
-
-function movePlayer(amount) {
-  player.x += amount;
-  player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
-}
-
 function updateGame() {
   if (isPaused) return;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
   ctx.drawImage(images.container, player.x, player.y, player.width, player.height);
 
@@ -83,8 +82,8 @@ function updateGame() {
     drop.y += 5;
 
     const caught = drop.y + 32 >= player.y &&
-                   drop.x < player.x + player.width &&
-                   drop.x + 32 > player.x;
+      drop.x < player.x + player.width &&
+      drop.x + 32 > player.x;
 
     if (caught) {
       if (drop.type === 'water') {
@@ -103,7 +102,7 @@ function updateGame() {
     }
   }
 
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = "white";
   ctx.font = "20px Arial";
   ctx.fillText("Score: " + score, 10, 30);
 
@@ -127,14 +126,13 @@ function resumeGame() {
 }
 
 function restartGame() {
-  document.location.reload();
+  startGame(); // reset all
 }
 
 function endGame() {
   clearInterval(gameInterval);
   clearInterval(dropInterval);
-  document.removeEventListener('keydown', keyboardControl);
-  document.getElementById('game-screen').classList.add('hidden');
+  document.getElementById('pause-button').style.display = 'none';
   document.getElementById('result-screen').classList.remove('hidden');
 
   if (score > highScore) {
@@ -149,31 +147,38 @@ function endGame() {
 }
 
 function getEventX(e) {
-return e.touches ? e.touches[0].clientX : e.clientX;
+  return e.touches ? e.touches[0].clientX : e.clientX;
 }
 
 function startDrag(e) {
-const x = getEventX(e) - canvas.getBoundingClientRect().left;
-if (x >= player.x && x <= player.x + player.width) {
-    dragging = true;
+  const rect = canvas.getBoundingClientRect();
+  const x = getEventX(e) - rect.left;
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+  if (
+    x >= player.x &&
+    x <= player.x + player.width &&
+    y >= player.y &&
+    y <= player.y + player.height
+  ) {
+    isDragging = true;
+    dragOffsetX = x - player.x;
     e.preventDefault();
-}
+  }
 }
 
 function doDrag(e) {
-if (!dragging) return;
+  if (!isDragging) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = getEventX(e) - rect.left;
 
-const canvasRect = canvas.getBoundingClientRect();
-const x = getEventX(e) - canvasRect.left;
-
-player.x = x - player.width / 2;
-player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
-
-e.preventDefault();
+  player.x = x - dragOffsetX;
+  player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
+  e.preventDefault();
 }
 
-function stopDrag(e) {
-dragging = false;
+function stopDrag() {
+  isDragging = false;
 }
 
 loadAssets();

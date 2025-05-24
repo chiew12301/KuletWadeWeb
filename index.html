@@ -1,36 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset = "UTF-8">
-        <title>Kulet Wade</title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-
-    <body>
-        <div id="start-screen">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Kulet Wade</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="game-container">
+        <div id="start-screen" class="overlay">
             <h1>Kulet Wade</h1>
             <button onclick="startGame()">Start Game</button>
         </div>
 
-        <div id="game-screen" class="hidden">
-            <canvas id="gameCanvas" width="480" height="648"></canvas>
-            <button id="pause-button" onclick="pauseGame()">Pause</button>
-        </div>
-        
-        <div id="pause-screen" class="hidden">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="pause-screen" class="overlay hidden">
             <h2>Game Paused</h2>
             <button onclick="resumeGame()">Resume</button>
             <button onclick="restartGame()">Restart</button>
         </div>
-        
-        <div id="result-screen" class="hidden">
+
+        <div id="result-screen" class="overlay hidden">
             <h2>Game Over</h2>
             <p id="final-score"></p>
             <p id="high-score"></p>
             <button onclick="restartGame()">Restart</button>
         </div>
-        
-        <script src="script.js"></script>
-        </body> </html>
-    </body>
+
+        <button id="pause-button" onclick="pauseGame()">Pause</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
